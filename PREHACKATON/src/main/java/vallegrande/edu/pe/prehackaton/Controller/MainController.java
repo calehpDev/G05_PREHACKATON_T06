@@ -7,6 +7,8 @@ import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import vallegrande.edu.pe.prehackaton.Model.Inscripcion;
 import vallegrande.edu.pe.prehackaton.Model.InscripcionDAO;
+import vallegrande.edu.pe.prehackaton.Model.Participante;
+import vallegrande.edu.pe.prehackaton.Model.ParticipanteDAO;
 import vallegrande.edu.pe.prehackaton.View.MainView;
 
 public class MainController {
@@ -16,6 +18,7 @@ public class MainController {
     private String usuarioLogueado;
 
     private final InscripcionDAO inscripcionDAO;
+    private final ParticipanteDAO participanteDAO;
 
     public MainController(MainView view, Stage stage, String usuarioLogueado) {
         this.view = view;
@@ -23,6 +26,7 @@ public class MainController {
         this.usuarioLogueado = usuarioLogueado;
 
         this.inscripcionDAO = new InscripcionDAO();
+        this.participanteDAO = new ParticipanteDAO();
 
         configurarEventos();
     }
@@ -37,12 +41,41 @@ public class MainController {
             view.getBtnEventos().setOnAction(e -> view.mostrarEventos());
         }
 
-        if (view.getBtnParticipantes() != null) {
-            view.getBtnParticipantes().setOnAction(e -> view.mostrarParticipantes());
-        }
-
         if (view.getBtnLogout() != null) {
             view.getBtnLogout().setOnAction(e -> cerrarSesion());
+        }
+
+        // --- MÓDULO PARTICIPANTES ---
+        if (view.getBtnParticipantes() != null) {
+            view.getBtnParticipantes().setOnAction(e -> {
+                view.mostrarParticipantes();
+                cargarParticipantes();
+            });
+        }
+
+        if (view.getTxtBuscarParticipantes() != null) {
+            view.getTxtBuscarParticipantes().setOnKeyReleased(e -> buscarParticipantes());
+        }
+
+        if (view.getBtnParticipanteRegistrar() != null) {
+            view.getBtnParticipanteRegistrar().setOnAction(e -> registrarParticipante());
+        }
+
+        if (view.getBtnParticipanteActualizar() != null) {
+            view.getBtnParticipanteActualizar().setOnAction(e -> actualizarParticipante());
+        }
+
+        if (view.getBtnParticipanteEliminar() != null) {
+            view.getBtnParticipanteEliminar().setOnAction(e -> eliminarParticipante());
+        }
+
+        if (view.getTablaParticipantes() != null) {
+            view.getTablaParticipantes().setOnMouseClicked(e -> {
+                Participante seleccion = view.getParticipanteSeleccionado();
+                if (seleccion != null) {
+                    view.cargarParticipanteEnFormulario(seleccion);
+                }
+            });
         }
 
         // --- MÓDULO INSCRIPCIONES ---
@@ -79,6 +112,133 @@ public class MainController {
         }
     }
 
+    // --- MÉTODOS PARTICIPANTES ---
+    private void cargarParticipantes() {
+        try {
+            List<Participante> lista = participanteDAO.listarTodos();
+            view.mostrarDatosParticipantes(lista);
+        } catch (Exception e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al cargar participantes: " + e.getMessage());
+        }
+    }
+
+    private void buscarParticipantes() {
+        try {
+            String texto = view.getTxtBuscarParticipantes().getText().trim();
+            List<Participante> lista = participanteDAO.listarPorInstitucion(texto);
+            view.mostrarDatosParticipantes(lista);
+        } catch (Exception e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al buscar participantes: " + e.getMessage());
+        }
+    }
+
+    private void registrarParticipante() {
+        try {
+            String nombres = view.getTxtParticipanteNombres().getText().trim();
+            String apellidos = view.getTxtParticipanteApellidos().getText().trim();
+            String dni = view.getTxtParticipanteDni().getText().trim();
+            String correo = view.getTxtParticipanteCorreo().getText().trim();
+
+            if (nombres.isEmpty() || apellidos.isEmpty() || dni.isEmpty() || correo.isEmpty()) {
+                mostrarAlerta(Alert.AlertType.WARNING, "Validación", "Complete los campos obligatorios (Nombres, Apellidos, DNI, Correo).");
+                return;
+            }
+
+            if (!dni.matches("\\d+")) {
+                mostrarAlerta(Alert.AlertType.WARNING, "Validación", "El DNI solo debe contener números.");
+                return;
+            }
+
+            Participante p = new Participante(
+                    nombres,
+                    apellidos,
+                    dni,
+                    correo,
+                    view.getTxtParticipanteTelefono().getText().trim(),
+                    view.getTxtParticipanteInstitucion().getText().trim()
+            );
+
+            if (participanteDAO.insertar(p)) {
+                mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Participante registrado correctamente.");
+                view.limpiarFormularioParticipantes();
+                cargarParticipantes();
+            } else {
+                mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo registrar el participante en la base de datos.");
+            }
+
+        } catch (Exception e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al registrar participante: " + e.getMessage());
+        }
+    }
+
+    private void actualizarParticipante() {
+        try {
+            Participante seleccion = view.getParticipanteSeleccionado();
+            if (seleccion == null) {
+                mostrarAlerta(Alert.AlertType.WARNING, "Advertencia", "Seleccione un participante de la tabla para actualizar.");
+                return;
+            }
+
+            String nombres = view.getTxtParticipanteNombres().getText().trim();
+            String apellidos = view.getTxtParticipanteApellidos().getText().trim();
+            String dni = view.getTxtParticipanteDni().getText().trim();
+            String correo = view.getTxtParticipanteCorreo().getText().trim();
+
+            if (nombres.isEmpty() || apellidos.isEmpty() || dni.isEmpty() || correo.isEmpty()) {
+                mostrarAlerta(Alert.AlertType.WARNING, "Validación", "Los campos principales no pueden estar vacíos.");
+                return;
+            }
+
+            seleccion.setNombres(nombres);
+            seleccion.setApellidos(apellidos);
+            seleccion.setDni(dni);
+            seleccion.setCorreo(correo);
+            seleccion.setTelefono(view.getTxtParticipanteTelefono().getText().trim());
+            seleccion.setInstitucion(view.getTxtParticipanteInstitucion().getText().trim());
+
+            if (participanteDAO.actualizar(seleccion)) {
+                mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Participante actualizado correctamente.");
+                view.limpiarFormularioParticipantes();
+                cargarParticipantes();
+            } else {
+                mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo actualizar el participante.");
+            }
+
+        } catch (Exception e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al actualizar participante: " + e.getMessage());
+        }
+    }
+
+    private void eliminarParticipante() {
+        try {
+            Participante seleccion = view.getParticipanteSeleccionado();
+            if (seleccion == null) {
+                mostrarAlerta(Alert.AlertType.WARNING, "Advertencia", "Seleccione un participante para eliminar.");
+                return;
+            }
+
+            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmacion.setTitle("Confirmación de Borrado");
+            confirmacion.setHeaderText(null);
+            confirmacion.setContentText("¿Está seguro de eliminar a " + seleccion.getNombres() + " " + seleccion.getApellidos() + "?");
+
+            Optional<ButtonType> resultado = confirmacion.showAndWait();
+            if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
+                if (participanteDAO.eliminar(seleccion.getIdParticipante())) {
+                    mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Participante eliminado correctamente.");
+                    view.limpiarFormularioParticipantes();
+                    cargarParticipantes();
+                } else {
+                    mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo eliminar el participante.");
+                }
+            }
+
+        } catch (Exception e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al eliminar participante: " + e.getMessage());
+        }
+    }
+
+    // --- MÉTODOS INSCRIPCIONES ---
     private void cargarInscripciones() {
         try {
             List<Inscripcion> lista = inscripcionDAO.listar();
@@ -192,5 +352,6 @@ public class MainController {
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
         alerta.showAndWait();
+
     }
 }

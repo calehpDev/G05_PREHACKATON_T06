@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import vallegrande.edu.pe.prehackaton.Model.Inscripcion;
+import vallegrande.edu.pe.prehackaton.Model.Participante;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -40,6 +41,22 @@ public class MainView extends BorderPane {
 
     private final TableView<Inscripcion> tablaInscripciones = new TableView<>();
     private final ObservableList<Inscripcion> listaInscripciones = FXCollections.observableArrayList();
+
+    // --- CONTROLES DEL MÓDULO PARTICIPANTES ---
+    private final TextField txtParticipanteNombres = new TextField();
+    private final TextField txtParticipanteApellidos = new TextField();
+    private final TextField txtParticipanteDni = new TextField();
+    private final TextField txtParticipanteCorreo = new TextField();
+    private final TextField txtParticipanteTelefono = new TextField();
+    private final TextField txtParticipanteInstitucion = new TextField();
+
+    private final Button btnParticipanteRegistrar = new Button("Registrar");
+    private final Button btnParticipanteActualizar = new Button("Actualizar");
+    private final Button btnParticipanteEliminar = new Button("Eliminar");
+    private final TextField txtBuscarParticipantes = new TextField();
+
+    private final TableView<Participante> tablaParticipantes = new TableView<>();
+    private final ObservableList<Participante> listaParticipantes = FXCollections.observableArrayList();
 
     public MainView() {
         initUI();
@@ -98,9 +115,88 @@ public class MainView extends BorderPane {
         panelEventos.getChildren().add(new Label("Módulo de Eventos"));
     }
 
+    @SuppressWarnings("unchecked")
     private void construirPanelParticipantes() {
-        panelParticipantes.setAlignment(Pos.CENTER);
-        panelParticipantes.getChildren().add(new Label("Módulo de Participantes"));
+        panelParticipantes.setSpacing(15);
+
+        Label lblTitulo = new Label("Gestión de Participantes");
+        lblTitulo.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        // Formulario de Entradas
+        GridPane gridForm = new GridPane();
+        gridForm.setHgap(10);
+        gridForm.setVgap(10);
+        gridForm.setPadding(new Insets(10));
+        gridForm.setStyle("-fx-background-color: #ecf0f1; -fx-background-radius: 5px;");
+
+        txtParticipanteNombres.setPromptText("Nombres");
+        txtParticipanteApellidos.setPromptText("Apellidos");
+        txtParticipanteDni.setPromptText("DNI");
+        txtParticipanteCorreo.setPromptText("Correo Electrónico");
+        txtParticipanteTelefono.setPromptText("Teléfono");
+        txtParticipanteInstitucion.setPromptText("Institución");
+
+        gridForm.add(new Label("Nombres:"), 0, 0);
+        gridForm.add(txtParticipanteNombres, 1, 0);
+        gridForm.add(new Label("Apellidos:"), 2, 0);
+        gridForm.add(txtParticipanteApellidos, 3, 0);
+
+        gridForm.add(new Label("DNI:"), 0, 1);
+        gridForm.add(txtParticipanteDni, 1, 1);
+        gridForm.add(new Label("Correo:"), 2, 1);
+        gridForm.add(txtParticipanteCorreo, 3, 1);
+
+        gridForm.add(new Label("Teléfono:"), 0, 2);
+        gridForm.add(txtParticipanteTelefono, 1, 2);
+        gridForm.add(new Label("Institución:"), 2, 2);
+        gridForm.add(txtParticipanteInstitucion, 3, 2);
+
+        // Botones CRUD
+        HBox boxBotones = new HBox(10);
+        btnParticipanteRegistrar.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnParticipanteActualizar.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnParticipanteEliminar.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;");
+        boxBotones.getChildren().addAll(btnParticipanteRegistrar, btnParticipanteActualizar, btnParticipanteEliminar);
+
+        // Buscador Dinámico / Reporte por Institución
+        txtBuscarParticipantes.setPromptText("Buscar por institución o datos...");
+        HBox boxBuscador = new HBox(10, new Label("Buscar:"), txtBuscarParticipantes);
+        boxBuscador.setAlignment(Pos.CENTER_LEFT);
+
+        // Tabla de Datos
+        TableColumn<Participante, Integer> colId = new TableColumn<>("ID");
+        colId.setCellValueFactory(new PropertyValueFactory<>("idParticipante"));
+        colId.setPrefWidth(50);
+
+        TableColumn<Participante, String> colNombres = new TableColumn<>("Nombres");
+        colNombres.setCellValueFactory(new PropertyValueFactory<>("nombres"));
+        colNombres.setPrefWidth(120);
+
+        TableColumn<Participante, String> colApellidos = new TableColumn<>("Apellidos");
+        colApellidos.setCellValueFactory(new PropertyValueFactory<>("apellidos"));
+        colApellidos.setPrefWidth(120);
+
+        TableColumn<Participante, String> colDni = new TableColumn<>("DNI");
+        colDni.setCellValueFactory(new PropertyValueFactory<>("dni"));
+        colDni.setPrefWidth(90);
+
+        TableColumn<Participante, String> colCorreo = new TableColumn<>("Correo");
+        colCorreo.setCellValueFactory(new PropertyValueFactory<>("correo"));
+        colCorreo.setPrefWidth(160);
+
+        TableColumn<Participante, String> colTelefono = new TableColumn<>("Teléfono");
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colTelefono.setPrefWidth(90);
+
+        TableColumn<Participante, String> colInstitucion = new TableColumn<>("Institución");
+        colInstitucion.setCellValueFactory(new PropertyValueFactory<>("institucion"));
+        colInstitucion.setPrefWidth(140);
+
+        tablaParticipantes.getColumns().addAll(colId, colNombres, colApellidos, colDni, colCorreo, colTelefono, colInstitucion);
+        tablaParticipantes.setItems(listaParticipantes);
+        VBox.setVgrow(tablaParticipantes, Priority.ALWAYS);
+
+        panelParticipantes.getChildren().addAll(lblTitulo, gridForm, boxBotones, new Separator(), boxBuscador, tablaParticipantes);
     }
 
     @SuppressWarnings("unchecked")
@@ -204,6 +300,49 @@ public class MainView extends BorderPane {
     public Button getBtnInscripciones() { return btnInscripciones; }
     public Button getBtnLogout() { return btnLogout; }
 
+    // GETTERS PARTICIPANTES
+    public TextField getTxtParticipanteNombres() { return txtParticipanteNombres; }
+    public TextField getTxtParticipanteApellidos() { return txtParticipanteApellidos; }
+    public TextField getTxtParticipanteDni() { return txtParticipanteDni; }
+    public TextField getTxtParticipanteCorreo() { return txtParticipanteCorreo; }
+    public TextField getTxtParticipanteTelefono() { return txtParticipanteTelefono; }
+    public TextField getTxtParticipanteInstitucion() { return txtParticipanteInstitucion; }
+    public TextField getTxtBuscarParticipantes() { return txtBuscarParticipantes; }
+    public Button getBtnParticipanteRegistrar() { return btnParticipanteRegistrar; }
+    public Button getBtnParticipanteActualizar() { return btnParticipanteActualizar; }
+    public Button getBtnParticipanteEliminar() { return btnParticipanteEliminar; }
+    public TableView<Participante> getTablaParticipantes() { return tablaParticipantes; }
+
+    public Participante getParticipanteSeleccionado() {
+        return tablaParticipantes.getSelectionModel().getSelectedItem();
+    }
+
+    public void cargarParticipanteEnFormulario(Participante p) {
+        if (p != null) {
+            txtParticipanteNombres.setText(p.getNombres());
+            txtParticipanteApellidos.setText(p.getApellidos());
+            txtParticipanteDni.setText(p.getDni());
+            txtParticipanteCorreo.setText(p.getCorreo());
+            txtParticipanteTelefono.setText(p.getTelefono());
+            txtParticipanteInstitucion.setText(p.getInstitucion());
+        }
+    }
+
+    public void mostrarDatosParticipantes(List<Participante> lista) {
+        listaParticipantes.setAll(lista);
+    }
+
+    public void limpiarFormularioParticipantes() {
+        txtParticipanteNombres.clear();
+        txtParticipanteApellidos.clear();
+        txtParticipanteDni.clear();
+        txtParticipanteCorreo.clear();
+        txtParticipanteTelefono.clear();
+        txtParticipanteInstitucion.clear();
+        tablaParticipantes.getSelectionModel().clearSelection();
+    }
+
+    // GETTERS INSCRIPCIONES
     public TextField getTxtBuscarInscripciones() { return txtBuscarInscripciones; }
     public Button getBtnInscripcionRegistrar() { return btnInscripcionRegistrar; }
     public Button getBtnInscripcionActualizar() { return btnInscripcionActualizar; }

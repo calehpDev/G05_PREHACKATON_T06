@@ -14,7 +14,7 @@ public class InscripcionDAO {
         String sql = "SELECT id_inscripcion, id_evento, id_participante, fecha_inscripcion, estado " +
                 "FROM inscripciones ORDER BY id_inscripcion ASC";
 
-        try (Connection conn = vallegrande.edu.pe.sistema_web.Model.Conexion.conectar();
+        try (Connection conn = vallegrande.edu.pe.prehackaton.Model.Conexion.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -39,7 +39,7 @@ public class InscripcionDAO {
                 "OR CAST(id_participante AS CHAR) LIKE ? OR estado LIKE ? " +
                 "ORDER BY id_inscripcion ASC";
 
-        try (Connection conn = vallegrande.edu.pe.sistema_web.Model.Conexion.conectar();
+        try (Connection conn = vallegrande.edu.pe.prehackaton.Model.Conexion.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             String filtro = "%" + texto + "%";
@@ -66,7 +66,7 @@ public class InscripcionDAO {
     public void insertar(Inscripcion inscripcion) throws SQLException {
         String sql = "INSERT INTO inscripciones (id_evento, id_participante, estado) VALUES (?, ?, ?)";
 
-        try (Connection conn = vallegrande.edu.pe.sistema_web.Model.Conexion.conectar();
+        try (Connection conn = vallegrande.edu.pe.prehackaton.Model.Conexion.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, inscripcion.getIdEvento());
@@ -79,7 +79,7 @@ public class InscripcionDAO {
     public void actualizar(Inscripcion inscripcion) throws SQLException {
         String sql = "UPDATE inscripciones SET id_evento = ?, id_participante = ?, estado = ? WHERE id_inscripcion = ?";
 
-        try (Connection conn = vallegrande.edu.pe.sistema_web.Model.Conexion.conectar();
+        try (Connection conn = vallegrande.edu.pe.prehackaton.Model.Conexion.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, inscripcion.getIdEvento());
@@ -93,7 +93,7 @@ public class InscripcionDAO {
     public void eliminar(int id) throws SQLException {
         String sql = "DELETE FROM inscripciones WHERE id_inscripcion = ?";
 
-        try (Connection conn = vallegrande.edu.pe.sistema_web.Model.Conexion.conectar();
+        try (Connection conn = vallegrande.edu.pe.prehackaton.Model.Conexion.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
